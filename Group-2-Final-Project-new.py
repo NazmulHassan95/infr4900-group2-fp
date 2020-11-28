@@ -24,34 +24,35 @@ class Blockchain:
         self.wallets = {}
         self.mempool = {}
 
+        self.contracts = {}
+
         self.add()
 
 ###################### ADD CODE ONLY BETWEEN THESE LINES! #####################
-
-    ALLOWED_EXTENSIONS = {'.py'}
     
     #TODO: HARDCODE A WALLET(ADDRESS) THAT WILL BE USED TO TRANSFER/DEDUCT FUNDS FOR THE UPLOADING OF CONTRACT
 
 
-    def create_wallet(self, contract=None):
+    def create_wallet(self, contract):
+        print(contract)
         if contract==None:
             wallet = {
                 'public_key': binascii.b2a_hex(os.urandom(16)).decode('utf-8'),
                 'private_key': binascii.b2a_hex(os.urandom(16)).decode('utf-8'),
                 'balance': 10.0,
             }
-        else:
-            wallet = {
+            self.wallets[wallet['public_key']] = wallet
+            return wallet
+
+        elif contract is not None:
+            contract = {
                 'public_key': binascii.b2a_hex(os.urandom(16)).decode('utf-8'),
             }
-        
+            self.contracts[contract['public_key']] = contract
+            return contract
         #TODO: CREATE A TRANSACTION HERE THAT SUBTRACTS FROM CONTRACT UPLOADERS BALANCE
         #TODO: I NEED A GAS CALCULATION FUNCTION TO BE CALLED HERE TO GET THE COST FOR UPLOAD
-
-        self.wallets[wallet['public_key']] = wallet
-        return wallet
-
-    #def wallet_transaction(self, from_, to, amount, private_key, message):
+#    def wallet_transaction(self, from_, to, amount, private_key, message):
 
 
 
@@ -146,10 +147,6 @@ class Blockchain:
     def _check_merkle_root(self, block):
         return self._calculate_merkle_root(list(block['transactions'])) \
             == block['header']['merkle_root']
-
-    def _allowed_file(filename):
-        return '.' in filename and \
-                filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 ###############################################################################
@@ -324,6 +321,15 @@ create_wallet() FUNCTION WHERE THE CONTRACT CAN BE PUBLISHED IN A TRANSACTION AN
 UPLOADER'S WALLET.  AGAIN, IF NO .py FILE IS UPLOADED, ONLY A REGULAR WALLET IS CREATED.  SEE THE create_wallet()
 FUNCTION ABOVE FOR MORE DETAILS.'''
 
+ALLOWED_EXTENSIONS = {'.py'}
+
+def allowed_file(filename):
+    foo = '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    if foo == False:
+        return "False"
+    else:
+        return "True"
+
 @app.route('/api/blockchain/wallet', methods=['GET', 'POST'])
 def add_wallet():
     if request.method == 'GET':
@@ -339,21 +345,16 @@ def add_wallet():
             file_ = request.files['file']
             if file_.filename == '':
                 return Response(
-                        response=json.dumps(blockchain.create_wallet()),
+                        response=json.dumps(blockchain.create_wallet(contract=None)),
                         status=200,
                         mimetype='application/json'
                         )
             elif file_ and allowed_file(file_.filename):
                 return Response(
-                        response=json.dumps(blockchain.createwallet(contract=file_)),
+                        response=json.dumps(blockchain.create_wallet(contract=file_)),
                         status=200,
                         mimetype='application/json'
                         )
-
-                
-
-
-            
 
 
 @app.route('/api/blockchain/balances', methods=['GET'])
