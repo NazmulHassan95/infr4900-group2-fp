@@ -26,7 +26,7 @@ class Blockchain:
         self.mempool = {}
         self.memconpool = {}
         self.contracts = {}
-
+        self.transaction_messages = {}
         self.add()
 
 ###################### ADD CODE ONLY BETWEEN THESE LINES! #####################
@@ -245,7 +245,7 @@ class Blockchain:
         block['transactions'] = self._choose_transactions_from_mempool()
         block['header']['merkle_root'] = \
             self._calculate_merkle_root(list(block['transactions']))
-
+        block['transaction_messages'] = self.removed_transaction_from_transaction_message()
         while True:
 
             block['header']['nonce'] = binascii.b2a_hex(os.urandom(16)).decode('utf-8')
@@ -310,6 +310,24 @@ class Blockchain:
         self.transaction_messages[hashed_transaction_message] = transaction_message
 
         return hashed_transaction_message
+    
+     def removed_transaction_from_transaction_message(self):
+
+        executed_transaction = {}
+
+        while len(self.transaction_messages) > 0:
+            transaction_id = list(self.transaction_messages)[len(self.transaction_messages) - 1]
+            transaction = copy.deepcopy(self.transaction_messages[transaction_id])
+
+            if transaction['gas'] <= self.wallets[transaction['From']]['balance']:
+
+                deducted_balance = self.wallets[transaction['From']]['balance'] - transaction['gas']
+
+                executed_transaction[transaction_id] = transaction
+            
+            del self.transaction_messages[transaction_id]
+
+        return executed_transaction
 
 
 # ------------------------------ FLASK ROUTES ------------------------------- #
