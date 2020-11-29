@@ -311,7 +311,7 @@ class Blockchain:
 
         return hashed_transaction_message
     
-     def removed_transaction_from_transaction_message(self):
+    def removed_transaction_from_transaction_message(self):
 
         executed_transaction = {}
 
